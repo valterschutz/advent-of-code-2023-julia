@@ -1,4 +1,7 @@
 using PrettyPrinting
+using ProgressBars
+# using StaticArrays
+using DataStructures
 
 """
     parse_map(str)
@@ -10,6 +13,7 @@ into a mapping of Function type.
 """
 function parse_map(str)
     thing = [[parse(Int,cap) for cap in m.captures] for m in eachmatch(r"^(\d+) (\d+) (\d+)$"m, str)]
+    d = Dict((src_range_start:(src_range_start+range_length-1), dest_range_start:(dest_range_start+range_length-1)) for (dest_range_start, src_range_start, range_length) in thing)
     return function(src)
         for (dest_range_start, src_range_start, range_length) in thing
             if src in src_range_start:(src_range_start+range_length-1)
@@ -21,8 +25,7 @@ function parse_map(str)
 end
 
 function parse_seeds(str)
-    g = (m.captures for m in eachmatch(r"(\d+) (\d+)", str))
-    g = ((parse(Int,a), parse(Int,b)) for (a,b) in g)
+    g = (parse.(Int,m.captures) for m in eachmatch(r"(\d+) (\d+)", str))
     return (i for (range_start, range_length) in g for i in range_start:(range_start+range_length-1))
 end
 
@@ -32,24 +35,11 @@ function main()
 
     seeds = parse_seeds(v[1])
     println("seeds parsed")
-    println(length(collect(seeds)))
     maps = parse_map.(v[2:end])
+    println("maps parsed")
 
     # For each seed, pass it through the maps
-    # things = seeds
-    # for mapping in maps
-    #     things = [mapping(thing) for thing in things]
-    # end
-    lowest_location = 999999
-    for seed in seeds
-        thing = seed
-        for mapping in maps
-            thing = mapping(thing)
-        end
-        if thing < lowest_location
-            lowest_location = thing
-        end
-    end
+    lowest_location = minimum(foldl((acc,f) -> f.(acc), maps, init=seeds))
     println("Lowest location: $lowest_location")
 end
 
