@@ -10,6 +10,7 @@ const card_dict = Dict([('2', 1), ('3', 2), ('4', 3), ('5', 4), ('6', 5), ('7', 
             ('8', 7), ('9', 8), ('T', 9), ('J', 10), ('Q', 11), ('K', 12),
             ('A', 13)])
 const card_chars = keys(card_dict)
+
 function Base.:<(a::Card, b::Card)
     return card_dict[a.char] < card_dict[b.char]
 end
@@ -74,9 +75,10 @@ function Base.:<(h1::Hand, h2::Hand)
     same_hand_type = h1_type == h2_type
     if same_hand_type
         for (card1, card2) in zip(h1.cards, h2.cards)
-            if card1 < card2
-                return true
+            if card1 == card2
+                continue
             end
+            return card1 < card2
         end
         return false
     else
@@ -103,20 +105,6 @@ for line in eachline("day7_input.txt")
     bid = parse(Int, bid_str)
     push!(bids, bid)
 end
-
-# hand_types = hands .|> hand_type
-#
-# println(count(ht -> ht == FiveOfAKind, hand_types))
-
-# counter = 0
-# for (hand, hand_type) in zip(hands, hand_types)
-#     pprintln((hand, hand_type))
-#     global counter += 1
-#     if counter == 200
-#         break
-#     end
-# end
-
 
 # Sort list of hands
 p = sortperm(hands)
