@@ -1,5 +1,7 @@
 using PrettyPrint
 
+# TODO: try https://en.wikipedia.org/wiki/Shoelace_formula
+
 function convert_input_file(input_filename, output_filename)
     contents = read(input_filename, String)
     contents = replace(contents,
