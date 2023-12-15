@@ -83,11 +83,6 @@ function connect_pipes!(pipe_matrix)
     end
 end
 
-# function get_start_index(pipe_matrix)
-#     # Finds where to start in the pipe matrix
-#
-# end
-
 function set_S_connected_pipes!(pipe_matrix, start_index)
     # Sets which pipes 'S' is connected to
     i, j = Tuple(start_index)
@@ -126,7 +121,6 @@ function start_travel(pipe_matrix, start_index, direction_index)
     next_pipe = start_pipe.connected_pipes[direction_index]
     step_counter = 1
     step_matrix[next_pipe.location...] = step_counter
-    # println("next_pipe.location is $(next_pipe.location)")
     prev_pipe, curr_pipe = curr_pipe, next_pipe
     # Take the rest until we come back to the start
     while true
@@ -150,7 +144,6 @@ function main()
     connect_pipes!(pipe_matrix)
 
     # Find where to start
-    # start_index = get_start_index(pipe_matrix)
     start_index = findfirst(p -> p.shape == 'S', pipe_matrix)
     set_S_connected_pipes!(pipe_matrix, start_index)
 

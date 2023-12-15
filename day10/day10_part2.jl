@@ -1,16 +1,15 @@
 using PrettyPrint
 
-# TODO: try https://en.wikipedia.org/wiki/Shoelace_formula
-
 function convert_input_file(input_filename, output_filename)
     contents = read(input_filename, String)
     contents = replace(contents,
+                       '|' => '\u2502',
                        '-' => '\u2500',
                        'L' => '\u2570',
                        '7' => '\u256e',
                        'F' => '\u256d',
                        'J' => '\u256f',
-                       'S' => '🟩')
+                       'S' => '\u25ce')
     write(output_filename, contents)
 end
 
@@ -85,11 +84,6 @@ function connect_pipes!(pipe_matrix)
     end
 end
 
-# function get_start_index(pipe_matrix)
-#     # Finds where to start in the pipe matrix
-#
-# end
-
 function set_S_connected_pipes!(pipe_matrix, start_index)
     # Sets which pipes 'S' is connected to
     i, j = Tuple(start_index)
@@ -122,13 +116,14 @@ end
 function start_travel(pipe_matrix, start_index, direction_index)
     start_pipe = pipe_matrix[start_index]
     step_matrix::Matrix{Union{Integer,Missing}} = fill(missing, size(pipe_matrix)...)
+    ind_vector::Vector{CartesianIndex} = [start_index]
     step_matrix[start_index] = 0
     curr_pipe = start_pipe
     # Take one step manually
     next_pipe = start_pipe.connected_pipes[direction_index]
     step_counter = 1
     step_matrix[next_pipe.location...] = step_counter
-    # println("next_pipe.location is $(next_pipe.location)")
+    push!(ind_vector, CartesianIndex(next_pipe.location...))
     prev_pipe, curr_pipe = curr_pipe, next_pipe
     # Take the rest until we come back to the start
     while true
@@ -138,10 +133,11 @@ function start_travel(pipe_matrix, start_index, direction_index)
         end
         step_counter += 1
         step_matrix[next_pipe.location...] = step_counter
+        push!(ind_vector, CartesianIndex(next_pipe.location...))
         prev_pipe, curr_pipe = curr_pipe, next_pipe
     end
     
-    return step_matrix
+    return step_matrix, ind_vector
 end
 
 function main()
@@ -152,23 +148,26 @@ function main()
     connect_pipes!(pipe_matrix)
 
     # Find where to start
-    # start_index = get_start_index(pipe_matrix)
     start_index = findfirst(p -> p.shape == 'S', pipe_matrix)
     set_S_connected_pipes!(pipe_matrix, start_index)
 
     # Start traveling along both directions, return a matrix with how many
     # steps it took to reach each pipe
-    step_matrix1 = start_travel(pipe_matrix, start_index, 1)
-    step_matrix2 = start_travel(pipe_matrix, start_index, 2)
+    _, pipe_coords = start_travel(pipe_matrix, start_index, 1)
+    pipe_coords = pipe_coords .|> Tuple
 
-    # Take the minimum of the two matrices above
-    step_matrix = min.(step_matrix1, step_matrix2)
+    pipe_length = length(pipe_coords)
+
+    # Create vector of (x,y) coordinates of pipes
+    shifted_pipe_coords = [pipe_coords[2:end]; pipe_coords[1]]
+
+    # Shoelace formula for area
+    area =  sum((y+ynext)*(x-xnext) for ((x,y),(xnext,ynext)) in zip(pipe_coords, shifted_pipe_coords)) / 2 |> abs
     
-    # The largest number is the largest distance
-    farthest_distance = maximum(skipmissing(step_matrix))
+    # Pick's theorem for number of interior points
+    i = Integer(area + 1 - pipe_length/2)
 
-    println("Farthest distance: $farthest_distance")
-
+    println("Number of interior points: $i")
 end
 
 if abspath(PROGRAM_FILE) == @__FILE__
